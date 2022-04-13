@@ -30,10 +30,16 @@ void Synthesizer::process_new_data( FileDescriptor& fd )
       auto& k = keys.at( midi_processor.get_event_note() - KEY_OFFSET );
 
       if ( !direction ) {
-        k.releases.push_back({ 0, midi_processor.get_event_velocity(), 1.0, false });
+        if (k.releases.size() == 0) {
+          k.releases.push_back({0, 0, 0, false});
+        }
+        k.releases.at(0) = { 0, midi_processor.get_event_velocity(), 1.0, false };
         k.presses.back().released = true;
       } else {
-        k.presses.push_back({ 0, midi_processor.get_event_velocity(), 1.0, false });
+        if (k.presses.size() == 0) {
+          k.presses.push_back({0, 0, 0, false});
+        }
+        k.presses.at(0) = { 0, midi_processor.get_event_velocity(), 1.0, false };
       }
 
       
@@ -79,25 +85,29 @@ void Synthesizer::advance_sample()
 {
   for ( size_t i = 0; i < NUM_KEYS; i++ ) {
     auto& k = keys.at( i );
+    size_t active_presses = k.presses.size();
+    size_t active_releases = k.releases.size();
     
 
-    for (size_t j = 0; j < k.presses.size(); j++) {
+    for (size_t j = 0; j < active_presses; j++) {
       k.presses.at(j).offset++;
 
       if ( note_repo.note_finished( true, i, k.presses.at(j).velocity, k.presses.at(j).offset ) ) {
         k.presses.pop_front();
         j--;
+        active_presses--;
       } else if ( ( k.presses.at(j).released && !sustain_down ) & ( k.presses.at(j).vol_ratio > 0 ) ) {
         k.presses.at(j).vol_ratio -= 0.0001;
       }
     }
 
-    for (size_t j = 0; j < k.releases.size(); j++) {
+    for (size_t j = 0; j < active_releases; j++) {
       k.releases.at(j).offset++;
 
       if ( note_repo.note_finished( false, i, k.releases.at(j).velocity, k.releases.at(j).offset ) ) {
         k.releases.pop_front();
         j--;
+        active_releases--;
       }
     }
 
