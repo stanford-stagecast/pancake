@@ -27,11 +27,11 @@ class Synthesizer
   bool sustain_down = false;
 
 public:
-  Synthesizer();
+  Synthesizer( FileDescriptor& fd );
 
   void process_new_data( FileDescriptor& fd );
 
   wav_frame_t calculate_curr_sample() const;
 
-  void advance_sample();
+  void advance_sample( FileDescriptor& fd );
 };

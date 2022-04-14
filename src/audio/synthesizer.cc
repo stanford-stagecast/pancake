@@ -9,16 +9,19 @@ constexpr unsigned int KEY_DOWN = 144;
 constexpr unsigned int KEY_UP = 128;
 constexpr unsigned int SUSTAIN = 176;
 
-Synthesizer::Synthesizer()
+Synthesizer::Synthesizer( FileDescriptor& fd )
 {
   for ( size_t i = 0; i < NUM_KEYS; i++ ) {
     keys.push_back( { {}, {} } );
   }
+  midi_processor.create_test_input( fd );
 }
 
 void Synthesizer::process_new_data( FileDescriptor& fd )
 {
+
   midi_processor.read_from_fd( fd );
+  
 
   while ( midi_processor.has_event() ) {
     if (midi_processor.get_event_type() == SUSTAIN) {
@@ -75,8 +78,9 @@ wav_frame_t Synthesizer::calculate_curr_sample() const
   return total_sample;
 }
 
-void Synthesizer::advance_sample()
+void Synthesizer::advance_sample( FileDescriptor& fd )
 {
+  midi_processor.create_test_input( fd );
   for ( size_t i = 0; i < NUM_KEYS; i++ ) {
     auto& k = keys.at( i );
     size_t active_presses = k.presses.size();

@@ -41,8 +41,8 @@ void program_body( const string_view device_prefix, const string& midi_filename 
   ChannelPair audio_signal { 16384 }; // the output signal
   size_t samples_written = 0;
 
-  FileDescriptor piano { CheckSystemCall( midi_filename, open( midi_filename.c_str(), O_RDONLY ) ) };
-  Synthesizer synth {};
+  FileDescriptor piano { CheckSystemCall( midi_filename, open( midi_filename.c_str(), O_RDWR ) ) };
+  Synthesizer synth { piano };
 
   /* rule #1: read events from MIDI piano and adjust synthesizer state as a result */
   event_loop->add_rule( "read MIDI data", piano, Direction::In, [&] { synth.process_new_data( piano ); } );
@@ -56,7 +56,7 @@ void program_body( const string_view device_prefix, const string& midi_filename 
         // cout << "total samp: " << samp.first << "\n";
         audio_signal.safe_set( samples_written, samp );
         samples_written++;
-        synth.advance_sample();
+        synth.advance_sample( piano );
       }
     },
     /* when should this rule run? commit to an output signal until 1 millisecond in the future */
