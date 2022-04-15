@@ -26,6 +26,8 @@ class Synthesizer
   std::vector<key> keys {};
   bool sustain_down = false;
 
+  size_t frames_processed = 0;
+
 public:
   Synthesizer( FileDescriptor& fd );
 

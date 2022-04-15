@@ -24,11 +24,11 @@ void MidiProcessor::read_from_fd( FileDescriptor& fd )
 
 void MidiProcessor::create_test_input( FileDescriptor& fd )
 {
-  const auto now = steady_clock::now();
+  //const auto now = steady_clock::now();
 
   if ( !test_pressed ) {
     for ( size_t r = 0; r < 2; r++) {
-      for ( size_t i = 25; i < 105; i++ ) {
+      for ( size_t i = 25; i < 30; i++ ) {
         fd.write(std::string(1, (char) 144));
         fd.write(std::string(1, (char) i));
         fd.write(std::string(1, (char) 65));
@@ -37,15 +37,15 @@ void MidiProcessor::create_test_input( FileDescriptor& fd )
     
     test_pressed = true;
     time_of_test_press = steady_clock::now();
-  } else if ( duration_cast<milliseconds>( now - time_of_test_press ).count() > 100 ) {   
-    for ( size_t r = 0; r < 2; r++) {
-      for ( size_t i = 25; i < 105; i++ ) {
-        fd.write(std::string(1, (char) 128));
-        fd.write(std::string(1, (char) i));
-        fd.write(std::string(1, (char) 65));
-      }
-    }
-    test_pressed = false;
+  } else {   
+    // for ( size_t r = 0; r < 2; r++) {
+    //   for ( size_t i = 25; i < 30; i++ ) {
+    //     fd.write(std::string(1, (char) 128));
+    //     fd.write(std::string(1, (char) i));
+    //     fd.write(std::string(1, (char) 65));
+    //   }
+    // }
+    // test_pressed = false;
   }
 
   pop_active_sense_bytes();

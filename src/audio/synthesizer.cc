@@ -1,6 +1,10 @@
 #include "synthesizer.hh"
 #include <cmath>
 #include <iostream>
+#include <chrono>
+
+using namespace std;
+using namespace chrono;
 
 constexpr unsigned int NUM_KEYS = 88;
 constexpr unsigned int KEY_OFFSET = 21;
@@ -24,11 +28,13 @@ void Synthesizer::process_new_data( FileDescriptor& fd )
   
 
   while ( midi_processor.has_event() ) {
+    std::cerr << (size_t) midi_processor.get_event_type() << " " << (size_t) midi_processor.get_event_note() << " " << (size_t)midi_processor.get_event_velocity() << "\n";
     if (midi_processor.get_event_type() == SUSTAIN) {
-      //std::cerr << (size_t) midi_processor.get_event_type() << " " << (size_t) midi_processor.get_event_note() << " " << (size_t)midi_processor.get_event_velocity() << "\n";
+      
       if (midi_processor.get_event_velocity() == 127) sustain_down = true;
       else  sustain_down = false;
     } else if (midi_processor.get_event_type() == KEY_DOWN || midi_processor.get_event_type() == KEY_UP) {
+      
       bool direction = midi_processor.get_event_type() == KEY_DOWN ? true : false;
       auto& k = keys.at( midi_processor.get_event_note() - KEY_OFFSET );
 
@@ -55,12 +61,15 @@ wav_frame_t Synthesizer::calculate_curr_sample() const
     size_t active_releases = k.releases.size();
 
     for (size_t j = 0; j < active_presses; j++) {
+      auto t1 = high_resolution_clock::now();
       float amplitude_multiplier = k.presses.at(j).vol_ratio * 0.2; /* to avoid clipping */
 
       const std::pair<float, float> curr_sample = note_repo.get_sample(true, i, k.presses.at(j).velocity, k.presses.at(j).offset );
 
       total_sample.first += curr_sample.first * amplitude_multiplier;
       total_sample.second += curr_sample.second * amplitude_multiplier;
+      auto t2 = high_resolution_clock::now();
+      if (frames_processed % 1000 == 0) std::cerr << "Time to get one sample: " << duration_cast<nanoseconds>(t2 - t1).count() << "\n";
     }
 
     for (size_t j = 0; j < active_releases; j++) {
@@ -74,13 +83,14 @@ wav_frame_t Synthesizer::calculate_curr_sample() const
     }
 
   }
-
+  
   return total_sample;
 }
 
 void Synthesizer::advance_sample( FileDescriptor& fd )
 {
   midi_processor.create_test_input( fd );
+  frames_processed++;
   for ( size_t i = 0; i < NUM_KEYS; i++ ) {
     auto& k = keys.at( i );
     size_t active_presses = k.presses.size();
