@@ -32,6 +32,23 @@ target_link_libraries ("play-wav-file" ${Sndfile_LDFLAGS_OTHER})
 target_link_libraries ("play-wav-file" ${Samplerate_LDFLAGS})
 target_link_libraries ("play-wav-file" ${Samplerate_LDFLAGS_OTHER})
 
+add_executable ("play-periods" "play-periods.cc")
+target_link_libraries ("play-periods" dbus)
+target_link_libraries ("play-periods" stats)
+target_link_libraries ("play-periods" audio)
+target_link_libraries ("play-periods" util)
+
+target_link_libraries ("play-periods" ${ALSA_LDFLAGS})
+target_link_libraries ("play-periods" ${ALSA_LDFLAGS_OTHER})
+
+target_link_libraries ("play-periods" ${DBus_LDFLAGS})
+target_link_libraries ("play-periods" ${DBus_LDFLAGS_OTHER})
+target_link_libraries ("play-periods" ${Sndfile_LDFLAGS})
+target_link_libraries ("play-periods" ${Sndfile_LDFLAGS_OTHER})
+
+target_link_libraries ("play-periods" ${Samplerate_LDFLAGS})
+target_link_libraries ("play-periods" ${Samplerate_LDFLAGS_OTHER})
+
 add_executable ("print-wav-file" "print-wav-file.cc")
 target_link_libraries ("print-wav-file" dbus)
 target_link_libraries ("print-wav-file" stats)
