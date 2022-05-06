@@ -34,27 +34,31 @@ void program_body( const string_view device_prefix, const string_view wav_filena
   playback_interface->set_config( config );
   playback_interface->initialize();
 
+  constexpr uint32_t sample_distance_to_write = 48;
+
   /* open the WAV file */
   WavWrapper note_sample { string( wav_filename ) };
 
   /* get ready to play an audio signal */
-  ChannelPair audio_signal { 16384 };  // the output signal
-  size_t next_sample_to_calculate = 0; // what's the next sample # to be written to the output signal?
+  ChannelPair audio_signal { 16384 }; // the output signal
+  size_t next_sample_to_play = 0;     // what's the next sample # to be written to the output signal?
 
-  /* rule #1: write a continuous sine wave (but no more than 1 millisecond into the future) */
+  /* rule #1: write samples from WAV file */
   event_loop->add_rule(
-    "calculate sine wave",
+    "write samples",
     [&] {
-      while ( next_sample_to_calculate <= playback_interface->cursor() + 48 ) {
-        const double time = next_sample_to_calculate / double( config.sample_rate );
-        /* compute the sine wave amplitude (middle A, 440 Hz) */
-        audio_signal.safe_set( next_sample_to_calculate,
-                               { 0.99 * sin( 2 * M_PI * 440 * time ), 0.99 * sin( 2 * M_PI * 440 * time ) } );
-        next_sample_to_calculate++;
+      while ( ( next_sample_to_play <= playback_interface->cursor() + sample_distance_to_write )
+              and not note_sample.at_end( next_sample_to_play ) ) {
+        /* play the wav file */
+        audio_signal.safe_set( next_sample_to_play, note_sample.view( next_sample_to_play ) );
+        next_sample_to_play++;
       }
     },
-    /* when should this rule run? commit to an output signal until 1 millisecond in the future */
-    [&] { return next_sample_to_calculate <= playback_interface->cursor() + 48; } );
+    /* when should this rule run? commit to an output signal until x milliseconds in the future */
+    [&] {
+      return ( next_sample_to_play <= playback_interface->cursor() + sample_distance_to_write )
+             and not note_sample.at_end( next_sample_to_play );
+    } );
 
   /* rule #2: play the output signal whenever space available in audio output buffer */
   event_loop->add_rule(
@@ -63,12 +67,12 @@ void program_body( const string_view device_prefix, const string_view wav_filena
     Direction::Out,           /* execute rule when file descriptor is "writeable"
                                  -> there's room in the output buffer (config.buffer_size) */
     [&] {
-      playback_interface->play( next_sample_to_calculate, audio_signal );
+      playback_interface->play( next_sample_to_play, audio_signal );
       /* now that we've played these samples, pop them from the outgoing audio signal */
       audio_signal.pop_before( playback_interface->cursor() );
     },
     [&] {
-      return next_sample_to_calculate > playback_interface->cursor();
+      return next_sample_to_play > playback_interface->cursor();
     },     /* rule should run as long as any new samples available to play */
     [] {}, /* no callback if EOF or closed */
     [&] {  /* on error such as buffer overrun/underrun, recover the ALSA interface */
