@@ -32,6 +32,18 @@ target_link_libraries ("play-wav-file" ${Sndfile_LDFLAGS_OTHER})
 target_link_libraries ("play-wav-file" ${Samplerate_LDFLAGS})
 target_link_libraries ("play-wav-file" ${Samplerate_LDFLAGS_OTHER})
 
+add_executable ("print-wav-file" "print-wav-file.cc")
+target_link_libraries ("print-wav-file" dbus)
+target_link_libraries ("print-wav-file" stats)
+target_link_libraries ("print-wav-file" audio)
+target_link_libraries ("print-wav-file" util)
+
+target_link_libraries ("print-wav-file" ${Sndfile_LDFLAGS})
+target_link_libraries ("print-wav-file" ${Sndfile_LDFLAGS_OTHER})
+
+target_link_libraries ("print-wav-file" ${Samplerate_LDFLAGS})
+target_link_libraries ("print-wav-file" ${Samplerate_LDFLAGS_OTHER})
+
 add_executable ("midi-input" "midi-input.cc")
 target_link_libraries ("midi-input" dbus)
 target_link_libraries ("midi-input" stats)
