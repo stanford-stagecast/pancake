@@ -4,11 +4,12 @@
 #include "audio_device_claim.hh"
 #include "eventloop.hh"
 #include "stats_printer.hh"
+#include "wav_wrapper.hh"
 #include <alsa/asoundlib.h>
 
 using namespace std;
 
-void program_body( const string_view device_prefix )
+void program_body( const string_view device_prefix, const string_view wav_filename )
 {
   /* speed up C++ I/O by decoupling from C standard I/O */
   ios::sync_with_stdio( false );
@@ -32,6 +33,9 @@ void program_body( const string_view device_prefix )
   config.avail_minimum = 64 * 8; /* device is writeable with 64 samples can be written */
   playback_interface->set_config( config );
   playback_interface->initialize();
+
+  /* open the WAV file */
+  WavWrapper note_sample { string( wav_filename ) };
 
   /* get ready to play an audio signal */
   ChannelPair audio_signal { 16384 };  // the output signal
@@ -84,7 +88,7 @@ void program_body( const string_view device_prefix )
 
 void usage_message( const string_view argv0 )
 {
-  cerr << "Usage: " << argv0 << " [device_prefix]\n";
+  cerr << "Usage: " << argv0 << " [device_prefix] [wav_filename]\n";
 
   cerr << "Available devices:";
 
@@ -109,12 +113,12 @@ int main( int argc, char* argv[] )
       abort();
     }
 
-    if ( argc != 2 ) {
+    if ( argc != 3 ) {
       usage_message( argv[0] );
       return EXIT_FAILURE;
     }
 
-    program_body( argv[1] );
+    program_body( argv[1], argv[2] );
   } catch ( const exception& e ) {
     cerr << e.what() << "\n";
     return EXIT_FAILURE;

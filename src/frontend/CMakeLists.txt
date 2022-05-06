@@ -29,6 +29,9 @@ target_link_libraries ("play-wav-file" ${DBus_LDFLAGS_OTHER})
 target_link_libraries ("play-wav-file" ${Sndfile_LDFLAGS})
 target_link_libraries ("play-wav-file" ${Sndfile_LDFLAGS_OTHER})
 
+target_link_libraries ("play-wav-file" ${Samplerate_LDFLAGS})
+target_link_libraries ("play-wav-file" ${Samplerate_LDFLAGS_OTHER})
+
 add_executable ("midi-input" "midi-input.cc")
 target_link_libraries ("midi-input" dbus)
 target_link_libraries ("midi-input" stats)
