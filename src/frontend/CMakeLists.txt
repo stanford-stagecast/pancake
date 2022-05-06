@@ -49,6 +49,30 @@ target_link_libraries ("play-periods" ${Sndfile_LDFLAGS_OTHER})
 target_link_libraries ("play-periods" ${Samplerate_LDFLAGS})
 target_link_libraries ("play-periods" ${Samplerate_LDFLAGS_OTHER})
 
+add_executable ("transform-periods" "transform-periods.cc")
+target_link_libraries ("transform-periods" dbus)
+target_link_libraries ("transform-periods" stats)
+target_link_libraries ("transform-periods" audio)
+target_link_libraries ("transform-periods" signal)
+target_link_libraries ("transform-periods" util)
+
+target_link_libraries ("transform-periods" ${ALSA_LDFLAGS})
+target_link_libraries ("transform-periods" ${ALSA_LDFLAGS_OTHER})
+
+target_link_libraries ("transform-periods" ${DBus_LDFLAGS})
+target_link_libraries ("transform-periods" ${DBus_LDFLAGS_OTHER})
+target_link_libraries ("transform-periods" ${Sndfile_LDFLAGS})
+target_link_libraries ("transform-periods" ${Sndfile_LDFLAGS_OTHER})
+
+target_link_libraries ("transform-periods" ${Samplerate_LDFLAGS})
+target_link_libraries ("transform-periods" ${Samplerate_LDFLAGS_OTHER})
+
+target_link_libraries ("transform-periods" ${Boost_LDFLAGS})
+target_link_libraries ("transform-periods" ${Boost_LDFLAGS_OTHER})
+target_link_libraries ("transform-periods" ${FFTW_LDFLAGS})
+target_link_libraries ("transform-periods" ${FFTW_LDFLAGS_OTHER})
+target_link_libraries ("transform-periods" "-lfftw3_threads")
+
 add_executable ("print-wav-file" "print-wav-file.cc")
 target_link_libraries ("print-wav-file" dbus)
 target_link_libraries ("print-wav-file" stats)
