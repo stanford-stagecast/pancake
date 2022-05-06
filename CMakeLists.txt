@@ -25,12 +25,22 @@ pkg_check_modules ( Samplerate REQUIRED samplerate )
 include_directories ( ${Samplerate_INCLUDE_DIRS} )
 add_compile_options ( ${Samplerate_CFLAGS} )
 
+find_package ( boost_headers REQUIRED Boost )
+include_directories ( SYSTEM ${Boost_INCLUDE_DIRS} )
+add_compile_options ( ${Boost_CFLAGS} )
+
+pkg_check_modules ( FFTW REQUIRED fftw3 )
+include_directories ( SYSTEM ${FFTW_INCLUDE_DIRS} )
+add_compile_options ( ${FFTW_CFLAGS} )
+
 include_directories ("${PROJECT_SOURCE_DIR}/src/util")
+include_directories ("${PROJECT_SOURCE_DIR}/src/signal")
 include_directories ("${PROJECT_SOURCE_DIR}/src/audio")
 include_directories ("${PROJECT_SOURCE_DIR}/src/stats")
 include_directories ("${PROJECT_SOURCE_DIR}/src/dbus")
 
 add_subdirectory ("${PROJECT_SOURCE_DIR}/src/util")
+add_subdirectory ("${PROJECT_SOURCE_DIR}/src/signal")
 add_subdirectory ("${PROJECT_SOURCE_DIR}/src/audio")
 add_subdirectory ("${PROJECT_SOURCE_DIR}/src/stats")
 add_subdirectory ("${PROJECT_SOURCE_DIR}/src/dbus")
