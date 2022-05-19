@@ -38,8 +38,8 @@ void program_body( const string_view device_prefix, const string& midi_filename,
   playback_interface->initialize();
 
   /* get ready to play an audio signal */
-  ChannelPair audio_signal { 16384 }; // the output signal
-  size_t samples_written = 0;
+  constexpr unsigned int future_length = 305 * 4096; // always maintain the current version of the future 26 seconds
+  ChannelPair audio_signal { future_length };
 
   FileDescriptor piano { CheckSystemCall( midi_filename, open( midi_filename.c_str(), O_RDONLY ) ) };
   Synthesizer synth { sample_directory };
@@ -50,48 +50,34 @@ void program_body( const string_view device_prefix, const string& midi_filename,
 
   /* rule #2: let synthesizer read in new MIDI processor data */
   event_loop->add_rule(
-    "synthesizer processes data",
+    "synthesizer processes MIDI event",
     [&] {
       while ( midi_processor.has_event() ) {
-        synth.process_new_data(
-          midi_processor.get_event_type(), midi_processor.get_event_note(), midi_processor.get_event_velocity() );
+        synth.process_event( audio_signal,
+                             playback_interface->cursor(),
+                             midi_processor.get_event_type(),
+                             midi_processor.get_event_note(),
+                             midi_processor.get_event_velocity() );
         midi_processor.pop_event();
       }
     },
     /* when should this rule run? */
     [&] { return midi_processor.has_event(); } );
 
-  /* rule #3: write synthesizer output to speaker (but no more than 1 millisecond into the future) */
-  event_loop->add_rule(
-    "synthesize piano",
-    [&] {
-      while ( samples_written <= playback_interface->cursor() + 48 ) {
-        pair<float, float> samp = synth.calculate_curr_sample();
-        // cout << "total samp: " << samp.first << "\n";
-        audio_signal.safe_set( samples_written, samp );
-        samples_written++;
-        synth.advance_sample();
-      }
-    },
-    /* when should this rule run? commit to an output signal until 1 millisecond in the future */
-    [&] { return samples_written <= playback_interface->cursor() + 48; } );
-
-  /* rule #4: play the output signal whenever space available in audio output buffer */
+  /* rule #3: play the output signal up to the "horizon" ahead of the current cursor */
   event_loop->add_rule(
     "sound output",
     playback_interface->fd(), /* file descriptor event cares about */
     Direction::Out,           /* execute rule when file descriptor is "writeable"
                                  -> there's room in the output buffer (config.buffer_size) */
     [&] {
-      playback_interface->play( samples_written, audio_signal );
+      playback_interface->play( playback_interface->cursor() + config.buffer_size, audio_signal );
       /* now that we've played these samples, pop them from the outgoing audio signal */
       audio_signal.pop_before( playback_interface->cursor() );
     },
-    [&] {
-      return samples_written > playback_interface->cursor();
-    },     /* rule should run as long as any new samples available to play */
-    [] {}, /* no callback if EOF or closed */
-    [&] {  /* on error such as buffer overrun/underrun, recover the ALSA interface */
+    [&] { return true; }, /* rule should always run as long as audio device wants more samples */
+    [] {},                /* no callback if EOF or closed */
+    [&] {                 /* on error such as buffer overrun/underrun, recover the ALSA interface */
           playback_interface->recover();
           return true;
     } );

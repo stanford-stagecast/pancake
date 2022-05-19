@@ -19,8 +19,32 @@ Synthesizer::Synthesizer( const string& sample_directory )
   }
 }
 
-void Synthesizer::process_new_data( uint8_t event_type, uint8_t event_note, uint8_t event_velocity )
+void Synthesizer::process_event( ChannelPair& future,
+                                 const size_t now,
+                                 uint8_t event_type,
+                                 uint8_t event_note,
+                                 uint8_t event_velocity )
 {
+  /* for a press: add the recording of the key press
+                  at the appropriate velocity (precomputed)
+                  to *that string's* future */
+  /* for a release: taper the current future of *that string*
+                    to zero after 0.2 seconds. then add the release
+                    sound to *that string's* future */
+
+  /* finally: sum up all 88 string futures and write that into the "future"
+     given as an argument to this function */
+
+  auto& total_future_region = future.region( now, 305 * 4096 );
+  fill( total_future_region, 0 );
+
+  for ( key& thekey : keys ) {
+    auto& string_future_region = thekey.future.region( now, 305 * 4096 );
+    for ( unsigned int i = now; i < now + 305 * 4096; i++ ) {
+      total_future_region[i] += string_future_region[i];
+    }
+  }
+
   if ( event_type == SUSTAIN ) {
     // std::cerr << (size_t) midi_processor.get_event_type() << " " << (size_t) event_note << " " <<
     // (size_t)event_velocity << "\n";
