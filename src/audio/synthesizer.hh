@@ -2,6 +2,7 @@
 
 #include "midi_processor.hh"
 #include "note_repository.hh"
+#include "audio_buffer.hh"
 //#include <deque>
 #include <vector>
 
@@ -19,9 +20,6 @@ class Synthesizer
   {
     /* ChannelPair giving the next 26-ish seconds of THIS string */
     ChannelPair future { 305 * 4096 };
-
-    std::vector<sound> presses;
-    std::vector<sound> releases;
   };
 
   NoteRepository note_repo; /* has precomputed array of integer samples for each possible press velocity */
@@ -38,7 +36,8 @@ public:
                       uint8_t event_note,
                       uint8_t event_velocity );
 
-  wav_frame_t calculate_curr_sample() const;
+  void calculate_total_future( ChannelPair& future, const size_t now );
 
-  void advance_sample();
+  void add_key_press( uint8_t event_note, uint8_t event_velocity, const size_t now );
+  void sim_key_release( uint8_t event_note, uint8_t event_velocity, const size_t now );
 };
