@@ -48,7 +48,7 @@ void Synthesizer::process_event( ChannelPair& future,
     bool direction = event_type == KEY_DOWN ? true : false;
 
     if ( !direction ) {
-      sim_key_release( event_note, event_velocity, now );
+      sim_key_release( event_note, now );
     } else {
       add_key_press( event_note, event_velocity, now );
     }
@@ -77,21 +77,19 @@ void Synthesizer::add_key_press( uint8_t event_note, uint8_t event_velocity, con
   }
 }
 
-void Synthesizer::sim_key_release( uint8_t event_note, uint8_t event_velocity, const size_t now )
+void Synthesizer::sim_key_release( uint8_t event_note, const size_t now )
 {
   auto& k = keys.at( event_note - KEY_OFFSET );
+  float vol_ratio = 1.0;
 
   for ( size_t i = 0; i < 305 * 4096; i++ ) {
-    float amp_multi = 0.2; /* to avoid clipping */
-
-    std::pair<float, float> press_samp = note_repo.get_sample( true, event_note - KEY_OFFSET, event_velocity, i );
     std::pair<float, float> curr_samp = k.future.safe_get(i + now);
-    press_samp.first *= amp_multi;
-    press_samp.second *= amp_multi;
-    press_samp.first += curr_samp.first;
-    press_samp.second += curr_samp.second;
+    curr_samp.first *= vol_ratio;
+    curr_samp.second *= vol_ratio;
 
-    k.future.safe_set( i + now, press_samp );
+    k.future.safe_set( i + now, curr_samp );
+
+    vol_ratio--;
   }
 }
 

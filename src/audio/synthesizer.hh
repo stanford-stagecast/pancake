@@ -39,5 +39,5 @@ public:
   void calculate_total_future( ChannelPair& future, const size_t now );
 
   void add_key_press( uint8_t event_note, uint8_t event_velocity, const size_t now );
-  void sim_key_release( uint8_t event_note, uint8_t event_velocity, const size_t now );
+  void sim_key_release( uint8_t event_note, const size_t now );
 };
