@@ -61,19 +61,19 @@ void Synthesizer::process_event( ChannelPair& future,
 void Synthesizer::add_key_press( uint8_t event_note, uint8_t event_velocity, const size_t now )
 {
   auto& k = keys.at( event_note - KEY_OFFSET );
+  auto key_region_left = k.future.ch1().region( now, 305 * 4096 );
+  auto key_region_right = k.future.ch2().region( now, 305 * 4096 );
 
   for ( size_t i = 0; i < 305 * 4096; i++ ) {
     if (note_repo.note_finished( true, event_note - KEY_OFFSET, event_velocity, i)) break;
     float amp_multi = 0.2; /* to avoid clipping */
 
     std::pair<float, float> press_samp = note_repo.get_sample( true, event_note - KEY_OFFSET, event_velocity, i );
-    std::pair<float, float> curr_samp = k.future.safe_get(i + now);
     press_samp.first *= amp_multi;
     press_samp.second *= amp_multi;
-    press_samp.first += curr_samp.first;
-    press_samp.second += curr_samp.second;
 
-    k.future.safe_set( i + now, press_samp );
+    key_region_left[i] = press_samp.first;
+    key_region_right[i] = press_samp.second;
   }
 }
 
@@ -97,20 +97,22 @@ void Synthesizer::calculate_total_future( ChannelPair& future, const size_t now 
 {
   //auto& total_future_region = future.region( now, 305 * 4096 );
   //fill( future, 0 );
-  
-
+  auto total_region_left = future.ch1().region( now, 305 * 4096 );
+  auto total_region_right = future.ch1().region( now, 305 * 4096 );
   for ( size_t i = 0; i < 305 * 4096; i++ ) {
-    std::pair<float, float> curr_samp = { 0, 0 };
+    total_region_left[i] = 0;
+    total_region_right[i] = 0;
+  }
 
-    for ( size_t j = 0; j < NUM_KEYS; j++ ) {
-      auto& k = keys.at( j );
-      std::pair<float, float> key_samp = k.future.safe_get( i );
-      curr_samp.first += key_samp.first * 0.5;
-      curr_samp.second += key_samp.second * 0.5;
-      
+  for ( size_t j = 0; j < NUM_KEYS; j++ ) {
+    auto& k = keys.at( j );
+    auto key_region_left = k.future.ch1().region( now, 305 * 4096 );
+    auto key_region_right = k.future.ch2().region( now, 305 * 4096 );
+    for ( size_t i = 0; i < 305 * 4096; i++ ) {
+      total_region_left[i] += key_region_left[i];
+      total_region_right[i] += key_region_right[i];
     }
 
-    future.safe_set( i + now, curr_samp );
   }
 }
 
