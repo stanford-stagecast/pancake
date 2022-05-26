@@ -35,8 +35,6 @@ void Synthesizer::process_event( ChannelPair& future,
   /* finally: sum up all 88 string futures and write that into the "future"
      given as an argument to this function */
 
-
-
   if ( event_type == SUSTAIN ) {
     // std::cerr << (size_t) midi_processor.get_event_type() << " " << (size_t) event_note << " " <<
     // (size_t)event_velocity << "\n";
@@ -81,16 +79,15 @@ void Synthesizer::sim_key_release( uint8_t event_note, const size_t now )
 {
   auto& k = keys.at( event_note - KEY_OFFSET );
   float vol_ratio = 1.0;
+  auto key_region_left = k.future.ch1().region( now, 305 * 4096 );
+  auto key_region_right = k.future.ch2().region( now, 305 * 4096 );
 
   for ( size_t i = 0; i < 305 * 4096; i++ ) {
-    std::pair<float, float> curr_samp = k.future.safe_get(i + now);
-    curr_samp.first *= vol_ratio;
-    curr_samp.second *= vol_ratio;
-
-    k.future.safe_set( i + now, curr_samp );
-
-    vol_ratio--;
+    key_region_left[i] *= vol_ratio;
+    key_region_right[i] *= vol_ratio;
+    vol_ratio -= 0.001;
   }
+
 }
 
 void Synthesizer::calculate_total_future( ChannelPair& future, const size_t now )
@@ -117,34 +114,9 @@ void Synthesizer::calculate_total_future( ChannelPair& future, const size_t now 
 }
 
 
-// void Synthesizer::advance_sample()
-// {
-//   frames_processed++;
-//   for ( size_t i = 0; i < NUM_KEYS; i++ ) {
-//     auto& k = keys.at( i );
-//     size_t active_presses = k.presses.size();
-//     size_t active_releases = k.releases.size();
-
-//     for ( size_t j = 0; j < active_presses; j++ ) {
-//       k.presses.at( j ).offset++;
-
-//       if ( note_repo.note_finished( true, i, k.presses.at( j ).velocity, k.presses.at( j ).offset ) ) {
-//         k.presses.erase( k.presses.begin() );
-//         j--;
-//         active_presses--;
-//       } else if ( ( k.presses.at( j ).released && !sustain_down ) & ( k.presses.at( j ).vol_ratio > 0 ) ) {
-//         k.presses.at( j ).vol_ratio -= 0.0001;
-//       }
-//     }
-
-//     for ( size_t j = 0; j < active_releases; j++ ) {
-//       k.releases.at( j ).offset++;
-
-//       if ( note_repo.note_finished( false, i, k.releases.at( j ).velocity, k.releases.at( j ).offset ) ) {
-//         k.releases.erase( k.releases.begin() );
-//         j--;
-//         active_releases--;
-//       }
-//     }
-//   }
-// }
+void Synthesizer::advance_key_future( const size_t to_pop ) {
+  for ( size_t j = 0; j < NUM_KEYS; j++ ) {
+    auto& k = keys.at( j );
+    k.future.pop_before( to_pop );
+  }
+}

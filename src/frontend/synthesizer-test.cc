@@ -74,6 +74,7 @@ void program_body( const string_view device_prefix, const string& midi_filename,
       playback_interface->play( playback_interface->cursor() + config.buffer_size, audio_signal );
       /* now that we've played these samples, pop them from the outgoing audio signal */
       audio_signal.pop_before( playback_interface->cursor() );
+      synth.advance_key_future( playback_interface->cursor() );
     },
     [&] { return true; }, /* rule should always run as long as audio device wants more samples */
     [] {},                /* no callback if EOF or closed */

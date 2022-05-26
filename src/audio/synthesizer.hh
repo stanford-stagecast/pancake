@@ -40,4 +40,6 @@ public:
 
   void add_key_press( uint8_t event_note, uint8_t event_velocity, const size_t now );
   void sim_key_release( uint8_t event_note, const size_t now );
+
+  void advance_key_future( const size_t to_pop );
 };
