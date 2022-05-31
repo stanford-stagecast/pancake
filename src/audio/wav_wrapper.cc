@@ -61,7 +61,7 @@ bool WavWrapper::at_end( size_t offset ) const
   return false;
 }
 
-wav_frame_t WavWrapper::view( size_t offset ) const
+std::pair<float, float> WavWrapper::view( size_t offset ) const
 {
   if ( at_end( offset ) ) {
     return { 0, 0 };

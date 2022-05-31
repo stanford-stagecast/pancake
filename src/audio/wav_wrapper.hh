@@ -13,7 +13,7 @@ class WavWrapper
 public:
   WavWrapper( const std::string& filename );
 
-  wav_frame_t view( size_t offset ) const;
+  std::pair<float, float> view( size_t offset ) const;
   bool at_end( size_t offset ) const;
 
   void bend_pitch( const double pitch_bend_ratio );
