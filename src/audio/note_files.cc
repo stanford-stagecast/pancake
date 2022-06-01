@@ -36,7 +36,7 @@ NoteFiles::NoteFiles( const string& sample_directory,
       bend_pitch( pow( 2, 1.0 / 12.0 ) );
     }
 
-    for (size_t i = 0; i < 128; i++) {
+    for (size_t i = 0; i < 28; i++) {
       calculate_velocity_samps( i );
     }
 }

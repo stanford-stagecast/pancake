@@ -81,7 +81,6 @@ void Synthesizer::sim_key_release( uint8_t event_note, const size_t now )
   float vol_ratio = 1.0;
   auto key_region_left = k.future.ch1().region( now, 305 * 4096 );
   auto key_region_right = k.future.ch2().region( now, 305 * 4096 );
-
   for ( size_t i = 0; i < 305 * 4096; i++ ) {
     key_region_left[i] *= vol_ratio;
     key_region_right[i] *= vol_ratio;
@@ -106,6 +105,10 @@ void Synthesizer::calculate_total_future( ChannelPair& future, const size_t now 
     auto key_region_left = k.future.ch1().region( now, 305 * 4096 );
     auto key_region_right = k.future.ch2().region( now, 305 * 4096 );
     for ( size_t i = 0; i < 305 * 4096; i++ ) {
+      //if (i > 50 && i < 200 && key_region_left[i] != 0)
+      //  std::cerr << "total region left: " << total_region_left[i] << "\n";
+      //if (i > 50 && i < 200 && key_region_left[i] != 0)
+      //  std::cerr << "key region left: " << key_region_left[i] << "\n";
       total_region_left[i] += key_region_left[i];
       total_region_right[i] += key_region_right[i];
     }
