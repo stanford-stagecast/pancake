@@ -1,12 +1,7 @@
 #include <iostream>
-#include <set>
 
-#include "eventloop.hh"
-#include "midi_processor.hh"
-#include "stats_printer.hh"
 #include "synthesizer.hh"
-#include "wav_wrapper.hh"
-#include <alsa/asoundlib.h>
+#include "timer.hh"
 
 using namespace std;
 
@@ -15,37 +10,32 @@ void program_body( const string& sample_directory )
   /* speed up C++ I/O by decoupling from C standard I/O */
   ios::sync_with_stdio( false );
 
-  /* create event loop */
-  auto event_loop = make_shared<EventLoop>();
-
   /* get ready to play an audio signal */
   constexpr unsigned int future_length = 305 * 4096; // always maintain the current version of the future 26 seconds
   ChannelPair audio_signal { future_length };
 
   Synthesizer synth { sample_directory };
-  MidiProcessor midi_processor {};
 
-  /* rule #2: let synthesizer read in new MIDI processor data */
-  event_loop->add_rule(
-    "synthesize event",
-    [&] {
-      while ( midi_processor.has_event() ) {
-        synth.process_event( audio_signal,
-                             0,
-                             midi_processor.get_event_type(),
-                             midi_processor.get_event_note(),
-                             midi_processor.get_event_velocity() );
-        midi_processor.pop_event();
-      }
-    },
-    /* when should this rule run? */
-    [&] { return midi_processor.has_event(); } );
+  uint64_t ts = Timer::timestamp_ns();
 
-  /* add a task that prints statistics occasionally */
-  StatsPrinterTask stats_printer { event_loop };
+  vector<uint64_t> times;
+  times.reserve( 64 );
 
-  /* run the event loop forever */
-  while ( event_loop->wait_next_event( stats_printer.wait_time_ms() ) != EventLoop::Result::Exit ) {
+  for ( unsigned int i = 0; i < 64; i++ ) {
+    synth.process_event( audio_signal,
+                         0,
+                         144, /* KEY_DOWN */
+                         21,  /* lowest key */
+                         10 /* low velocity */ );
+    const uint64_t new_ts = Timer::timestamp_ns();
+
+    times.push_back( new_ts - ts );
+    ts = new_ts;
+  }
+
+  for ( const auto& time : times ) {
+    Timer::pp_ns( std::cout, time );
+    cout << "\n";
   }
 }
 
