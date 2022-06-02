@@ -47,3 +47,15 @@ target_link_libraries ("synthesizer-test" ${Sndfile_LDFLAGS_OTHER})
 
 target_link_libraries ("synthesizer-test" ${Samplerate_LDFLAGS})
 target_link_libraries ("synthesizer-test" ${Samplerate_LDFLAGS_OTHER})
+
+
+add_executable ("synthesizer-benchmark" "synthesizer-benchmark.cc")
+target_link_libraries ("synthesizer-benchmark" stats)
+target_link_libraries ("synthesizer-benchmark" audio)
+target_link_libraries ("synthesizer-benchmark" util)
+
+target_link_libraries ("synthesizer-benchmark" ${Sndfile_LDFLAGS})
+target_link_libraries ("synthesizer-benchmark" ${Sndfile_LDFLAGS_OTHER})
+
+target_link_libraries ("synthesizer-benchmark" ${Samplerate_LDFLAGS})
+target_link_libraries ("synthesizer-benchmark" ${Samplerate_LDFLAGS_OTHER})
