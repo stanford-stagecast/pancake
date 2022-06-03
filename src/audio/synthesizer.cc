@@ -84,7 +84,8 @@ void Synthesizer::sim_key_release( uint8_t event_note, const size_t now )
   for ( size_t i = 0; i < 305 * 4096; i++ ) {
     key_region_left[i] *= vol_ratio;
     key_region_right[i] *= vol_ratio;
-    vol_ratio -= 0.001;
+    if (vol_ratio > 0)
+      vol_ratio -= 0.001;
   }
 
 }

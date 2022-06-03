@@ -28,7 +28,10 @@ public:
   const WavWrapper& getRel() const { return rel; };
 
   bool has_damper() const { return has_damper_; }
-  std::pair<float, float> get_sample( uint8_t velocity, size_t offset ) const { return velocity_samps.at( (size_t) velocity ).at( offset ); };
+  std::pair<float, float> get_sample( uint8_t velocity, size_t offset ) const { 
+    if (velocity > 27) velocity = 27;
+    return velocity_samps.at( (size_t) velocity ).at( offset ); 
+  };
 
   void bend_pitch( const double pitch_bend_ratio );
   void calculate_velocity_samps( size_t velocity );

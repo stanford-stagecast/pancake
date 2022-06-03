@@ -55,7 +55,12 @@ const wav_frame_t NoteRepository::get_sample( const bool direction,
                                               const unsigned long offset ) const
 {
   if ( direction ) {
-    return notes.at( note ).get_sample( velocity, offset );
+    if (!notes.at( note ).getSlow().at_end( offset )) {
+      return notes.at( note ).get_sample( velocity, offset );
+    } else {
+      return {0, 0};
+    }
+    
   }
 
   return notes.at( note ).getRel().view( offset );
